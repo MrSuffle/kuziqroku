@@ -5,7 +5,7 @@ app = Flask(__name__)
 app.secret_key = "cok_gizli_anahtar" # Session güvenliği için gerekli
 
 # AYARLAR
-ANA_GIRIS_SIFRESI = "12345"  # Siteye girerken sorulacak şifre
+ANA_GIRIS_SIFRESI = "1923"  # Siteye girerken sorulacak şifre
 gecerli_sifreler = ["940708b7", "Giris2026", "OzelKod99", "Admin44"]
 kullanilmis_kodlar = set()
 
