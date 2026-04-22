@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Giriş Yap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+        .login-card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        input { padding: 10px; font-size: 16px; width: 80%; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Sistem Girişi</h2>
+        <input type="password" id="sifreInput" placeholder="Şifreyi girin...">
+        <br>
+        <button onclick="girisYap()">Giriş</button>
+        <p id="hata" style="color: red;"></p>
+    </div>
+
+    <script>
+        function girisYap() {
+            const sifre = document.getElementById('sifreInput').value;
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sifre: sifre })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.reload(); // Sayfayı yenile, session artık aktif
+                } else {
+                    document.getElementById('hata').innerText = data.message;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
