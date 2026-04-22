@@ -5,61 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #ececec; padding: 20px; }
-        .card { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        #reader { width: 100%; border-radius: 10px; display: none; margin-top: 15px; }
-        .status { padding: 15px; margin: 15px 0; border-radius: 8px; font-weight: bold; font-size: 1.1em; }
-        button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-upload { background: #6c757d; color: white; }
-        .btn-start { background: #28a745; color: white; display: none; }
-        .btn-reset { background: #007bff; color: white; display: none; }
-        input[type="file"] { margin: 15px 0; }
+        body { font-family: sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
+        .card { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        textarea { width: 90%; height: 150px; margin: 10px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
+        #reader { width: 100%; border-radius: 8px; display: none; margin-top: 15px; }
+        .status { padding: 15px; margin: 15px 0; border-radius: 8px; font-weight: bold; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-save { background: #007bff; color: white; }
+        .btn-reset { background: #6c757d; color: white; display: none; }
     </style>
 </head>
 <body>
 
 <div class="card" id="setupSection">
-    <h2>Şifre Listesini Yükle</h2>
-    <p>Lütfen şifrelerin bulunduğu <b>.txt</b> dosyasını seçin:</p>
-    <input type="file" id="fileInput" accept=".txt">
-    <button class="btn-upload" onclick="dosyaYukle()">DOSYAYI SİSTEME YÜKLE</button>
-    <p id="fileStatus"></p>
-    <button class="btn-start" id="startBtn" onclick="kamerayiAc()">TARAMAYI BAŞLAT</button>
+    <h2>Şifre Listesini Yapıştır</h2>
+    <p>Şifreleri her satıra bir tane gelecek şekilde alta yapıştırın:</p>
+    <textarea id="listeInput" placeholder="Örn:&#10;ABC123&#10;XYZ456&#10;940708b7"></textarea>
+    <button class="btn-save" onclick="listeyiKaydet()">LİSTEYİ KAYDET VE BAŞLAT</button>
+    <p id="msg"></p>
 </div>
 
 <div class="card" id="scanSection" style="display: none;">
     <div id="reader"></div>
     <div id="statusDisplay" class="status">Kamera Hazır...</div>
     <button id="resetBtn" class="btn-reset" onclick="yeniTarama()">YENİ TARAMA (A)</button>
+    <button onclick="location.reload()" style="background:none; color:gray; font-size:12px; border:none; margin-top:20px;">← Listeyi Düzenle</button>
 </div>
 
 <script>
     const html5QrCode = new Html5Qrcode("reader");
     let kilitli = false;
 
-    function dosyaYukle() {
-        const fileInput = document.getElementById('fileInput');
-        if (fileInput.files.length === 0) return alert("Dosya seçmediniz!");
+    function listeyiKaydet() {
+        const metin = document.getElementById('listeInput').value;
+        if (!metin.trim()) return alert("Lütfen şifreleri girin!");
 
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        fetch('/upload_txt', { method: 'POST', body: formData })
+        fetch('/sifreleri_kaydet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ liste: metin })
+        })
         .then(res => res.json())
         .then(data => {
-            const status = document.getElementById('fileStatus');
-            status.innerText = data.message;
-            status.style.color = data.success ? "green" : "red";
-            if(data.success) document.getElementById('startBtn').style.display = 'block';
+            if(data.success) {
+                document.getElementById('setupSection').style.display = 'none';
+                document.getElementById('scanSection').style.display = 'block';
+                document.getElementById('reader').style.display = 'block';
+                html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            } else {
+                alert(data.message);
+            }
         });
-    }
-
-    function kamerayiAc() {
-        document.getElementById('setupSection').style.display = 'none';
-        document.getElementById('scanSection').style.display = 'block';
-        document.getElementById('reader').style.display = 'block';
-        
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
     }
 
     function onScanSuccess(decodedText) {
@@ -85,14 +81,13 @@
     function yeniTarama() {
         kilitli = false;
         const display = document.getElementById('statusDisplay');
-        display.innerText = "QR Okutun...";
+        display.innerText = "Sıradaki QR'ı Okutun...";
         display.style.backgroundColor = "transparent";
         display.style.color = "black";
         document.getElementById('resetBtn').style.display = 'none';
         html5QrCode.resume();
     }
 
-    // Klavye kısayolu
     document.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'a') yeniTarama(); });
 </script>
 
