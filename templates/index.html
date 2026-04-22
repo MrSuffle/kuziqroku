@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Kontrol Sistemi</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; }
+        #reader { width: 300px; margin: 20px auto; }
+        #sonuc { padding: 20px; font-weight: bold; font-size: 1.2em; }
+        #reset-btn { display: none; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>QR Kontrol Sistemi</h1>
+    <div id="reader"></div>
+    <div id="sonuc">Sistem Hazır. QR Okutun...</div>
+    <button id="reset-btn" onclick="sistemiSifirla()">YENİ OKUMA YAP (A)</button>
+
+    <script>
+        const html5QrCode = new Html5Qrcode("reader");
+        let kilitli = false;
+
+        function onScanSuccess(decodedText) {
+            if (kilitli) return; // a_degeri mantığı: kilitliyse işlem yapma
+            
+            kilitli = true;
+            html5QrCode.pause(); // Kamerayı durdur
+
+            fetch('/kontrol', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ qr_verisi: decodedText })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const resDiv = document.getElementById('sonuc');
+                resDiv.innerText = data.message;
+                resDiv.style.color = data.color;
+                document.getElementById('reset-btn').style.display = 'inline-block';
+            });
+        }
+
+        function sistemiSifirla() {
+            kilitli = false;
+            document.getElementById('sonuc').innerText = "Sistem Hazır. QR Okutun...";
+            document.getElementById('sonuc').style.color = "black";
+            document.getElementById('reset-btn').style.display = 'none';
+            html5QrCode.resume(); // Kamerayı tekrar başlat
+        }
+
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+
+        // Klavye desteği (Bilgisayardan denersen)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'a' || e.key === 'A') sistemiSifirla();
+        });
+    </script>
+</body>
+</html>
