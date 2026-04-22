@@ -5,7 +5,7 @@ app = Flask(__name__)
 app.secret_key = "cok_gizli_anahtar"
 
 # AYARLAR
-ANA_GIRIS_SIFRESI = "12345"
+ANA_GIRIS_SIFRESI = "1923"
 # Şifreleri bellekte tutacağız
 gecerli_sifreler = []
 kullanilmis_kodlar = set()
