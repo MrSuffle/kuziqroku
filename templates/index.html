@@ -13,23 +13,22 @@
         button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-save { background: #007bff; color: white; }
         .btn-reset { background: #6c757d; color: white; display: none; }
+        .btn-edit { background: none; color: #888; font-size: 13px; border: 1px solid #ddd; margin-top: 20px; width: auto; padding: 5px 15px; }
     </style>
 </head>
 <body>
 
 <div class="card" id="setupSection">
     <h2>Şifre Listesini Yapıştır</h2>
-    <p>Şifreleri her satıra bir tane gelecek şekilde alta yapıştırın:</p>
-    <textarea id="listeInput" placeholder="Örn:&#10;ABC123&#10;XYZ456&#10;940708b7"></textarea>
-    <button class="btn-save" onclick="listeyiKaydet()">LİSTEYİ KAYDET VE BAŞLAT</button>
-    <p id="msg"></p>
+    <textarea id="listeInput" placeholder="Her satıra bir şifre..."></textarea>
+    <button class="btn-save" onclick="listeyiKaydet()">KAYDET VE BAŞLAT</button>
 </div>
 
 <div class="card" id="scanSection" style="display: none;">
     <div id="reader"></div>
     <div id="statusDisplay" class="status">Kamera Hazır...</div>
     <button id="resetBtn" class="btn-reset" onclick="yeniTarama()">YENİ TARAMA (A)</button>
-    <button onclick="location.reload()" style="background:none; color:gray; font-size:12px; border:none; margin-top:20px;">← Listeyi Düzenle</button>
+    <button class="btn-edit" onclick="listeyeGeriDon()">← Listeyi Düzenle (Şifreli)</button>
 </div>
 
 <script>
@@ -52,8 +51,28 @@
                 document.getElementById('scanSection').style.display = 'block';
                 document.getElementById('reader').style.display = 'block';
                 html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            }
+        });
+    }
+
+    function listeyeGeriDon() {
+        const pass = prompt("Düzenleme yetkisi için şifreyi girin:");
+        if (!pass) return;
+
+        fetch('/duzenleme_kontrol', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sifre: pass })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('setupSection').style.display = 'block';
+                    document.getElementById('scanSection').style.display = 'none';
+                });
             } else {
-                alert(data.message);
+                alert("Hatalı düzenleme şifresi!");
             }
         });
     }
@@ -81,7 +100,7 @@
     function yeniTarama() {
         kilitli = false;
         const display = document.getElementById('statusDisplay');
-        display.innerText = "Sıradaki QR'ı Okutun...";
+        display.innerText = "QR Okutun...";
         display.style.backgroundColor = "transparent";
         display.style.color = "black";
         document.getElementById('resetBtn').style.display = 'none';
