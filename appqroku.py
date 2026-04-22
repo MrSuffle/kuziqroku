@@ -4,8 +4,8 @@ app = Flask(__name__)
 app.secret_key = "cok_gizli_anahtar"
 
 # ŞİFRELER
-ANA_GIRIS_SIFRESI = "12345"    # Siteye ilk girişte sorulan
-DUZENLEME_SIFRESI = "admin99"  # Listeye geri dönmek için sorulan
+ANA_GIRIS_SIFRESI = "1923"    # Siteye ilk girişte sorulan
+DUZENLEME_SIFRESI = "1206"  # Listeye geri dönmek için sorulan
 
 # Global Değişkenler
 gecerli_sifreler = []
